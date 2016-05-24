@@ -6,20 +6,35 @@
 </head>
 <body>
     <script>
-        var a = [1, 2, 3];
-        var len = a.length;
-        // 只能修改for括号中和console.log括号中语句
-        // for (var i=0, j=0; i<len; i++) {
-        //     setTimeout(function() {
-        //         console.log(a[j++]);
-        //     }, 200);
-        // }
-
-        for (let i=0; i<len; i++) {
-            setTimeout(function() {
-                console.log(a[i]);
-            }, 200);
+        function addTen (num) {
+             num +=10;
+             return num;
         }
+
+        // 传参为基本类型值时, 被传递值会被复制给一个局部变量. 修改局部变量, 不会影响到函数外部
+        var count = 20;
+        var result = addTen(count);
+        console.log(count); // 20
+        console.log(result); // 30
+
+        // 传参为引用类型时, 会把这个值在内存中的地址复制给一个局部变量, 因此局部变量的变化会反映在函数的外部
+        function setName(obj) {
+            obj.name = 'Kangkai';
+        }
+
+        var person = new Object();
+        setName(person);
+        console.log(person.name);
+
+        // 将person2传递给setName2()后, 其name属性被设置为'KangKai', 然后将一个新对象赋给变量obj, 同时设置其name为'Er', 若person2是按引用传递的, 那么person2就会自动修改为指向name属性为'Er'的新对象, 但访问person2.name发现值仍为kangkai, 说明即使在函数内部修改了参数的值, 原始的引用仍然保持未变. 实际上, 当函数内部重写obj时, 这个变量引用的就是一个局部对象了, 这个局部对象会在函数执行完毕后立即被摧毁.
+        function setName2(obj) {
+            obj.name = 'Kangkai';
+            obj = new Object();
+            obj.name = 'Er';
+        }
+        var person2 = new Object();
+        setName2(person2);
+        console.log(person2.name);
     </script>
 </body>
 </html>
