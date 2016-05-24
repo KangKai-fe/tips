@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        var a = [1, 2, 3];
+        var len = a.length;
+        // 只能修改for括号中和console.log括号中语句
+        // for (var i=0, j=0; i<len; i++) {
+        //     setTimeout(function() {
+        //         console.log(a[j++]);
+        //     }, 200);
+        // }
+
+        for (let i=0; i<len; i++) {
+            setTimeout(function() {
+                console.log(a[i]);
+            }, 200);
+        }
+    </script>
+</body>
+</html>
