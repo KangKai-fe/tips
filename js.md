@@ -51,5 +51,11 @@
     oneperson instanceof Person;    // true
 ```
 * Object.prototype.toString
+```js
+    Object.prototype.toString.apply([]);    // "[object Array]"
+    Object.prototype.toString.apply(function() {});    // "[object Function]"
+    Object.prototype.toString.apply(null);    // "[object Null]"
+    Object.prototype.toString.apply(undefined);    // "[object Undefined]"
+```
 * constructor
 * duck type
