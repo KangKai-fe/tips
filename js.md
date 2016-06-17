@@ -29,14 +29,14 @@
 
 ## 类型检测
 
-* typeof        返回字符串
+* typeof        返回字符串; 适合基本类型及function的检测, 遇到null失效(用===来判断null)
 ```javascript
     typeof function(){};    // "function"
     typeof [1, 2];          // "object"
     typeof NaN;            // "number"
     typeof null;           // "object"
 ```
-* instanceof    (obj instanceof Object)   基于原型链查找, 返回boolean值
+* instanceof    (obj instanceof Object)   基于原型链查找, 返回boolean值; 适合自定义对象, 也可以用来检测原生对象, 在不同window或iframe之间检测时失效
 ```javascript
     // 不同window或iframe之间的对象类型检测不能使用instanceof
     function Person() {};
@@ -50,11 +50,11 @@
     oneperson instanceof Student;   // false
     oneperson instanceof Person;    // true
 ```
-* Object.prototype.toString
+* Object.prototype.toString   适合内置对象和基本类型, 遇到null和undefined失效
 ```js
     Object.prototype.toString.apply([]);    // "[object Array]"
     Object.prototype.toString.apply(function() {});    // "[object Function]"
-    Object.prototype.toString.apply(null);    // "[object Null]"
+    Object.prototype.toString.apply(null);    // "[object Null]"; lt IE9 return "[object object]"
     Object.prototype.toString.apply(undefined);    // "[object Undefined]"
 ```
 * constructor
