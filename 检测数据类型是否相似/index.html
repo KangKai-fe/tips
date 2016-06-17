@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Untitled Document</title>
+
+</head>
+<body>
+    <script type="text/javascript">
+        /*
+         * param1 Array
+         * param2 Array
+         * return true or false
+         */
+        function arraysSimilar(arr1, arr2){
+
+            if (!(arr1 instanceof Array) || !(arr2 instanceof Array)) {
+                return false;
+            }
+
+            if (arr1.length !== arr2.length) {
+                return false;
+            }
+
+            if (arr1.length === 0) {
+                return true;
+            }
+
+            var typeArr1 = checkType(arr1);
+            var typeArr2 = checkType(arr2);
+
+            typeArr1.sort();
+            typeArr2.sort();
+            console.log(typeArr1);
+            console.log(typeArr2);
+            for (var i = 0; i < typeArr1.length; i++) {
+
+                if (typeArr1[i] !== typeArr2[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function checkType(arr) {
+            var typeArr = [];
+
+            for (var i = 0; i < arr.length; i++) {
+
+                if (typeof arr[i] !== 'object') {
+                    typeArr.push(typeof arr[i]);
+                // } else if (arr[i] === null) {
+                //     typeArr.push('null');
+                } else if (arr[i] instanceof Array) {
+                    typeArr.push('array');
+                } else if (arr[i] instanceof Date) {
+                    typeArr.push('date');
+                } else if (arr[i] instanceof Window) {
+                    typeArr.push('window');
+                } else if (arr[i] === null) {
+                    typeArr.push('null');
+                } else {
+                    typeArr.push('object')
+                }
+            }
+
+            return typeArr;
+        }
+    </script>
+    <script src="testData.js"></script>
+</body>
+</html>
