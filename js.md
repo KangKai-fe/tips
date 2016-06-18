@@ -169,3 +169,142 @@ try {
 catch (ex) {
    console.error('outer', ex.message);
 }
+```
+* function
+```
+// 函数声明 前置
+fd(); // true
+function fd() {
+   // do sth.
+   return true;
+}
+// 函数表达式
+fe(); // Uncaught ReferenceError: fe is not defined(…)
+var fe = function() {
+   // do sth.
+};
+```
+* for...in 1.顺序不确定(遍历数组, 尽量不要用); 2.enumerable为false时不会出现; 3.for in对象属性时受原型链影响
+* with 不建议使用 1.让js引擎优化更难; 2.可读性差; 3.`可被变量定义代替`; 4.严格模式下禁用
+* 'use strict' 1. 不允许使用with(SyntaxError); 2.不允许未声明的变量被赋值(ReferenceError); 3.arguments变为参数的静态副本; 4.delete参数或函数名报错(SyntaxError); 5.delete不可配置的属性报错(TypeError); 6.对象字面量重复属性名报错; 7.进制八进制字面量(SyntaxError); 8.eval, arguments变为关键字, 不能作为变量或函数名(SyntaxError); 9.eval独立作用域
+```
+!function(a) {
+   arguments[0] = 100;
+   console.log(a);
+}(1);
+// a传1 => 100; a不传参 => undefined
+!function(a) {
+   'use strict';
+   arguments[0] = 100;
+   console.log(a);
+}(1);
+// 1
+!function(a) {
+   'use strict';
+   arguments[0].x = 100;
+   console.log(a.x);
+}({x: 1});
+// 100
+```
+
+## 对象
+
+* 属性`无序`, 每个属性都有一个`字符串`key和对应的value
+* 对象创建 - 字面量
+```
+var obj1 = {x: 1, y: 2};
+var obj2 = {
+   x: 1,
+   y: 2,
+   o: {
+      z: 3,
+      n: 4
+   }
+};
+```
+* 对象创建 - new/原型链
+```
+function foo() {}
+foo.prototype.z = 3;
+
+var obj = new foo();
+obj.x = 1;
+obj.y = 2;
+
+obj.x; // 1
+obj.y; // 2
+obj.z; // 3
+typeob obj.toString; // 'function'
+'z' in obj; // true
+obj hasOwnProperty('z'); // false
+
+obj _proto_ -> foo.prototype
+foo _proto_ -> Object.prototype
+Object _proto_ -> null // 有限原型链
+
+obj.z = 5;
+obj.hasOwnProperty('z'); // true
+foo.prototype.z; // 3
+obj.z; // 5
+
+obj.z = undefined;
+obj.z; // undefined
+
+delete obj.z; // true
+obj.z; // 3
+
+delete obj.z; // true
+obj.z; // 3
+```
+* 对象创建 - Object.create
+```
+var obj = Object.create({x: 1}); // obj的_proto_指向Object.prototype
+obj.x; // 1
+typeof obj.toString// 'function'
+obj.hasOwnProperty('x'); // false
+
+var obj = Object.create(null);
+obj.toString; // undefined
+```
+* 对象属性 - 访问: 1. obj.prop; 2. obj['prop'];
+* for...in 遍历时可能会访问原型链上的属性
+* 属性检测
+```
+if (obj && obj.prop) {
+   prop = ...
+}
+if (obj.prop != undefined) {
+   // !== undefined or !== null
+}
+if (obj.prop !== undefined) {
+   // !== undefined
+}
+```
+* 属性getter/setter方法
+```
+var man = {
+   name: 'kk',
+   $age: null,
+   github: 'kangkai-fe',
+   get age() {
+      if (this.$age == undefined) {
+         return new Date().getFullYear() - 1991;
+      } else {
+         return this.$age;
+      }
+   },
+   set age(val) {
+      val = +val;
+      if (!isNaN(val) && val > 0 && val < 150) {
+         this.$age = val;
+      } else {
+         throw new Error('Incorrect val = ' + val);
+      }
+   }
+}
+console.log(man.age); // 25
+man.age = 30;
+console.log(man.age); // 30
+man.age = 'abc'; // error: Incorrect val = NaN
+
+```
