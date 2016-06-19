@@ -308,3 +308,44 @@ console.log(man.age); // 30
 man.age = 'abc'; // error: Incorrect val = NaN
 
 ```
+* 属性标签
+```
+Object.getOwnPropertyDescriptor({pro: true}, 'pro');  // 两个参数, 对象, 属性
+/* Object{
+ * value: true, 属性值
+ * writable: true, 是否可写
+ * enumerable: true,　是否可以被枚举（for...in中是否会出现）
+ * configurable: true 可不可以被delete删除或重新配制
+ * }
+ */
+Object.getOwnPropertyDescriptor({pro: true}, 'a');  // undefined
+
+var person = {};
+Object.defineProperty(person, 'name', {
+   configurable: false,
+   writable: false,
+   enumerable: true,
+   value: 'kangkai'
+});
+person.name; // kangkai
+person.name = 1;
+person.name; // kangkai
+delete person.name; //false
+
+Object.defineProperty(person, 'type', {
+   configurable: true,
+   writable: true,
+   enumerable: false,
+   value: 'Object'
+});
+Object.keys(person); // ['name']
+```
+* 对象标签
+   * [[proto]]
+   * [[class]]
+   * [[extensible]]
+   ```
+   Object.preventExtensible(obj);//使obj对象不可新增属性，原属性可改、可删
+   Object.seal(obj);//使obj不可新增属性，原属性可改但不可删
+   Object.freeze(obj);//使obj不可新增属性，原属性不可更改、删除
+   ```
