@@ -223,6 +223,8 @@ var obj2 = {
 };
 ```
 * 对象创建 - new/原型链
+    * `{} => Object.prototype`
+    * `[] => Array.prototype`
 ```
 function foo() {}
 foo.prototype.z = 3;
@@ -349,3 +351,234 @@ Object.keys(person); // ['name']
    Object.seal(obj);//使obj不可新增属性，原属性可改但不可删
    Object.freeze(obj);//使obj不可新增属性，原属性不可更改、删除
    ```
+
+## 数组 - 弱类型: 可以含有不同类型的元素
+
+```
+var arr = [1, true, null, undefined, {x: 1}, [1, 2, 3]];
+arr[0]; // 1
+arr[3]; // undefined
+arr[4].x; // 1
+arr[5][1]; // 2
+```
+
+* 创建数组
+    * - 字面量 `var BAT = ['baidu', 'alibaba', 'tencent']`
+    * - Array构造器: new Array
+    ```
+    var arr = new Array();
+    var arrWithLength = new Array(100); // size from 0 to 2^23-1; new 可以省略掉
+    var arrLikesLiteral = new Array(true, false, null, 1, 2, 'hi'); // 等价于[true, false, null, 1, 2, 'hi
+    ```
+* 数组元素读写
+```
+var arr = [1, 2, 3, 4, 5];
+arr[1]; // 2
+arr.length; // 5
+
+arr[5] = 6;
+arr.length; // 6
+
+delete arr[0]; // 将指定元素变为undefined
+arr[0]; // undefined
+arr.length; // 6
+```
+* 数组元素增删: 动态的, 无需指定大小
+```
+var arr = [];
+arr[0] = 1;
+arr[1] = 2;
+arr.push(3);
+arr; // [1, 2, 3]
+
+arr[arr.length] = 4; // arr.push(4)
+arr; // [1, 2, 3, 4]
+
+arr.unshift(0);
+arr; // [0, 1, 2, 3, 4]
+
+delete arr[2];
+arr; // [0, 1, undefined, 3, 4]
+arr.length; //5
+2 in arr; // false
+
+arr.length -= 1;
+arr; // [0, 1, undefined, 3]
+
+arr.pop();
+arr; // [0, 1, undefined]
+
+arr.shift();
+arr; // [1, undefined]
+```
+* 数组迭代
+```
+var i = 0, n = 10;
+var arr = [1, 2, 3, 4, 5];
+for (; i < n; i++) {
+    console.log(arr[i]); // 1, 2, 3, 4, 5
+}
+
+for (i in arr) {
+    console.log(arr[i]); // 1, 2, 3, 4, 5
+}
+
+Array.prototype.x = 'inherited';
+
+for (i in arr) {
+    console.log(arr[i]); // 1, 2, 3, 4, 5, inherited
+}
+
+for (i in arr) {
+    if (arr.hasOwnProperty(i)) {
+        console.log(arr[i]); // 1, 2, 3, 4, 5
+    }
+}
+```
+* 二维数组, 稀疏数组
+* 数组方法 [] => Array.prototype
+    * `[].join` 数组转化为字符串
+    * `[].reverse` 将数组逆序; `元素组被修改`(inplace operation)
+    * `[].sort` 排序; `元素组被修改`
+    ```
+    // 升序排列
+    arr.sort(function(a, b) {
+        return a - b;
+    });
+    ```
+    ```
+    // 对象
+    arr = [{age: 25}, {age: 15}, {age: 91}]
+    arr.sort(function(a, b) {
+        return a.age - b.age;
+    });
+    ```
+    * `[].concat` 数组合并; `原数组未被修改`
+    ```
+    var arr = [1, 2, 3];
+    arr.concat(4, 5); // [1, 2, 3, 4, 5]
+    arr; [1, 2, 3]
+    
+    // 可以将数组作为参数传参, 数组会被拉平(一次)
+    arr.concat([10, 11], 13); // [1, 2, 3, 10, 11, 13]
+    arr.concat([1, [2, 3]]); // [1, 2, 3, 1, [2, 3]]
+    ```
+    * `[].slice` 返回部分数组 `左闭右开区间`
+    ```
+    var arr = [1, 2, 3, 4, 5];
+    arr.slice(1, 3); // [2, 3]
+    arr.slice(1); // [2, 3, 4, 5]
+    arr.slice(1, -1); // [2, 3, 4]
+    arr.slice(-3, -4); // [2]
+    ```
+    * `[].splice` 数组拼接 `可以删, 可以拼接`; `元素组被修改`
+    ```
+    // (index, 个数, 添加元素)
+    var arr = [1, 2, 3, 4, 5];
+    arr.splice(1); // returns [3, 4, 5]
+    arr; // [1, 2]
+    
+    arr = [1, 2, 3, 4, 5];
+    arr.splice(2, 2); // returns [3, 4]
+    arr; // [1, 2, 5]
+    
+    arr = [1, 2, 3, 4, 5];
+    arr.splice(1, 1, 'a', 'b'); // returns [2]
+    arr; // [1, 'a', 'b', 3, 4, 5]
+    ```
+    * `[].forEach` (ES5 -> gt IE8) 数组遍历
+    ```
+    var arr = [1, 2, 3, 4, 5];
+    arr.forEach(function(item, index, a) {
+        console.log(item + '|' + index + '|' + (a === arr));
+    });
+    // 1|0|true
+    // 2|1|true
+    // 3|2|true
+    // 4|3|true
+    // 5|4|true
+    ```
+    * `[].map` (ES5) 数组映射 `原数组未被修改`
+    ```
+    var arr = [1, 2, 3];
+    arr.map(function(x) {
+        return x + 10;
+    }); // [11, 12, 13]
+    arr; // [1, 2, 3]
+    ```
+    * `[].filter` (ES5) 数组过滤 `原数组未被修改`
+    ```
+    var arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    arr.filter(function(x, index) {
+        return index % 3 === 0 || x >=8;
+    }); // returns[1, 4, 7, 8, 9, 10]
+    arr; // [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    ```
+    * `[].every` (ES5) 数组判断
+    ```
+    var arr = [1, 2, 3, 4, 5];
+    arr.every(function(x) {
+        return x < 10;
+    }); // true
+    
+    arr.every(function(x) {
+        return x < 3;
+    }); // false
+    ```
+    * `[].some` (ES5) 数组判断
+    ```
+    var arr = [1, 2, 3, 4, 5];
+    arr.some(function(x) {
+        return x === 3;
+    }); // true
+    
+    arr.some(function(x) {
+        return x === 100;
+    }); // false
+    ```
+    * `[].reduce/reduceRight` (ES5) 对数组元素两两进行操作 `原数组未被修改`
+    ```
+    var arr = [1, 2, 3];
+    var sum = arr.reduce(function(x, y) {
+        return x + y;
+    }, 0); // 6
+    arr; // [1, 2, 3]
+    
+    arr = [3, 9, 6];
+    var max = arr.reduce(function(x, y) {
+        console.log(x + '|' + y);
+        return x > y ? x : y;
+    });
+    // 3|9
+    // 9|6
+    max; // 9
+    
+    var max = arr.reduceRight(function(x, y) {
+        console.log(x + '|' + y);
+        return x > y ? x : y;
+    });
+    // 6|9
+    // 9|3
+    max; // 9
+    ```
+    * `[].indexOf/lastIndexOf` (ES5) 数组检索
+    ```
+    var arr = [1, 2, 3, 2, 1];
+    arr.indexOf(2); // 1
+    arr.indexOf(99); // -1
+    arr.indexOf(1, 1); // 4 -> 第二个元素开始查找
+    arr.indexOf(1, -3); // 4
+    arr.indexOf(2, -1); // -1
+    arr.lastIndexOf(2); // 3
+    arr.lastIndexOf(2, -2); // 3
+    arr.lastIndexOf(2, -3); // 1
+    ```
+    * `Array.isArray` (ES5) 判断是否为数组; 构造器的属性, 调用时应该用Array.isArray()
+    ```
+    Array.isArray([]); // true
+    
+    // 其他判断方法
+    [] instanceof Array; // true
+    ({}).toString.apply([]) === '[object Array]'; // true
+    [].constructor === Array; // true
+    ```
