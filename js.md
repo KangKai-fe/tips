@@ -737,7 +737,6 @@ p.b = 4;
 
 console.log(p.f()); // 5
 ```
-
 * get/set方法与this
 ```
 function modulus() {
@@ -754,4 +753,132 @@ Object.defineProperty(o, 'modulus', {
     get: modulus, enumerable: true, configurable: true
 });
 console.log(o.phase, o.modulus); // -0.78 1.4142
+```
+* 构造器中的this
+```
+function MyClass() {
+   this.a = 37;
+   // 构造器中没有return语句, 默认返回this
+}
+var o = new MyClass();
+console.log(o.a); // 37
+
+function C2() {
+   this.a = 37;
+   return {a: 38};
+}
+o = new C2();
+console.log(o.a); // 38
+```
+* call/apply方法与this
+```
+function add(c, d) {
+   return this.a + this.b + c + d;
+}
+var o = {a: 1, b: 3};
+
+add.call(o, 5, 7); // 16
+add.apply(o, [10, 20]); // 34
+
+function bar() {
+   console.log(Object.prototype.toString.call(this));
+}
+
+bar.call(7); // '[object Number]'
+```
+* bind方法与this (ES5 -> gt IE8)
+```
+function f() {
+   return this.a;
+}
+var g = f.bind({a: 'test'});
+console.log(g()); // test
+
+var o = {a: 37, f: f, g: g};
+console.log(o.f(), o.g()); // 37, test
+```
+
+## 函数属性和方法
+
+* arguments为类数组的对象, 没有join, slice等数组对象的方法
+```
+function foo(x, y, z) {
+   arguments.length; // 2 -> 实参个数
+   arguments[0]; // 1
+   arguments[0] = 10; // 绑定关系
+   x; // 10 -> 严格模式下仍然是1
+   
+   arguments[2] = 100; // 未传参数, 失去绑定关系
+   z; //undefined
+   arguments.callee === foo; // true -> 严格模式下禁止使用
+}
+
+foo(1, 2);
+foo.length; // 3 -> 形参的个数
+foo.name; // 'foo' -> 函数名
+```
+* apply/call方法(浏览器)
+```
+function foo(x, y) {
+   console.log(x, y, this);
+}
+
+foo.call(100, 1, 2); // 1, 2, Number(100)
+foo.apply(true, [3, 4]); // 3, 4, Boolean(true)
+foo.apply(null); // undefined, undefined, window
+foo.apply(undefined); // undefined, undefined, window
+
+function foo(x, y) {
+   'use strict';
+   console.log(x, y, this);
+}
+```
+* bind方法
+```
+this.x = 9;
+var module = {
+   x: 81,
+   getX: function() {return this.x;}
+};
+module.getX(); // 81
+
+var getX = module.getX;
+getX(); // 9
+
+var boundGetX = getX.bind(module);
+boundGetX(); // 81
+```
+* bind与currying
+```
+function add(a, b, c) {
+   return a + b + c;
+}
+
+var func = add.bind(undefined, 100); // a绑定为100
+func(1, 2); // 103
+
+var func2 = func.bind(undefined, 200); // b绑定为200
+func2(10); // 310
+
+// example
+function getConfig(color, size, otherOptions) {
+   console.log(colors, size, otherOptions);
+}
+
+var defaultConfig = getConfig.bind(null, '#cc0000', '1024 * 768');
+
+defaultConfig('123'); // #cc0000 1024 * 768 123
+defaultConfig('456'); // #cc0000 1024 * 768 456
+```
+* bind与new
+```
+function foo() {
+   this.b = 100;
+   return this.a;
+}
+
+var func = foo.bind({a: 1});
+
+func(); // 1
+new func(); // {b: 100} -> 去除bind的影响
 ```
