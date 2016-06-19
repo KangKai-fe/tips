@@ -582,3 +582,105 @@ for (i in arr) {
     ({}).toString.apply([]) === '[object Array]'; // true
     [].constructor === Array; // true
     ```
+
+## 函数
+
+JS中的函数也是对象, 可以像其他对象那样操作和传递, 也称JS中的函数为函数对象.
+
+* this
+* arguments
+* 作用域
+* 不同调用方式
+    * 直接调用 `foo();`
+    * 对象方法 `o.method();`
+    * 构造器 `new Foo();`
+    * call/apply/bind `func.call(o);`
+* 不同创建方式
+    * 函数声明: `函数声明会被前置`; `函数声明不能立即调用`
+    ```
+    function add(a, b) {
+        a = +a;
+        b = +b;
+        if (isNaN(a) || isNaN(b)) {
+            return;
+        }
+        return a + b;
+    }
+    ```
+    * 函数表达式
+    ```
+    // 函数表达式 function variable
+    var add = function(a, b) {
+        // do sth.
+    };
+    
+    // 立即执行函数表达式 IEF(immediately excuted function)
+    (function() {
+        // do sth.
+    })();
+    
+    // first-class function
+    return function() {
+        // do sth.
+    };
+    
+    // 命名函数表达式 NEF(named function expression)
+    var add = function foo(a, b) {
+        // do sth.
+    };
+    // 递归调用
+    var func = function nfe() {
+        // do sth.
+        nfe();
+    };
+    ```
+    * Function构造器
+    ```
+    var func = new Function('a', 'b', 'console.log(a + b);');
+    func(1, 2); // 3
+    
+    var func = Function('a', 'b', 'console.log(a + b);');
+    func(1, 2); // 3
+    ```
+    ```
+    // CASE 1
+    Function('var localVal = "local"; console.log(localVal)')();
+    console.log(typeof localVal);
+    // local, undefined -> localVal仍为局部变量
+    
+    // CASE 2
+    var globalVal = 'global';
+    (function() {
+        var locaVal = 'local';
+        Function('console.log(typeof localVal, typeof globalVal);')();
+    })()
+    // undefined, string -> 可以访问global, 不能访问local
+    ```
+* 变量 & 函数的声明前置
+```
+var num = add(1, 2);
+console.log(num); // 3
+
+function add(a, b) {
+    a = +a;
+    b = +b;
+    if (isNaN(a) || isNaN(b)) {
+        return;
+    }
+    return a + b;
+}
+```
+
+```
+var num = add(1, 2);
+console.log(num); // Uncaught TypeError: add is not a function(…)
+
+var add = function(a, b) {
+    a = +a;
+    b = +b;
+    if (isNaN(a) || isNaN(b)) {
+        return;
+    }
+    return a + b;
+}
+```
