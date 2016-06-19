@@ -684,3 +684,74 @@ var add = function(a, b) {
     return a + b;
 }
 ```
+
+## this
+
+* 全局的this(浏览器)
+```
+console.log(this.document === document); // true
+console.log(this === window); // true
+this.a = 37;
+console.log(window.a); // 37
+```
+* 一般函数的this(浏览器)
+```
+function f1() {
+    return this;
+}
+f1() === window; // true; nodejs中为global对象
+
+function f2() {
+    'use strict';
+    return this;
+}
+f2() === undefined; // true
+```
+* 作为对象方法的函数的this
+```
+var o = {
+    prop: 37,
+    f: function() {
+        return this.prop;
+    }
+};
+console.log(o.f()); // 37
+
+var o = {prop: 37};
+function independent() {
+    return this.prop;
+}
+o.f = independent;
+console.log(o.f()); // 37
+```
+* 对象原型链上的this
+```
+var o = {
+    f: function() {
+        return this.a + this.b;
+    }
+};
+var p = Object.create(o);
+p.a = 1;
+p.b = 4;
+
+console.log(p.f()); // 5
+```
+
+* get/set方法与this
+```
+function modulus() {
+    return Math.sqrt(this.re * this.re + this.im * this.im);
+}
+var o = {
+    re: 1,
+    im: -1,
+    get phase() {
+        return Math.atan2(this.im, this.re);
+    }
+};
+Object.defineProperty(o, 'modulus', {
+    get: modulus, enumerable: true, configurable: true
+});
+console.log(o.phase, o.modulus); // -0.78 1.4142
+```
