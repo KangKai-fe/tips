@@ -882,3 +882,198 @@ var func = foo.bind({a: 1});
 func(); // 1
 new func(); // {b: 100} -> 去除bind的影响
 ```
+
+## 闭包
+
+例子
+
+```
+function outer() {
+   var localVal = 30;
+   return localVal;
+}
+
+outer(); // 30, 局部变量localVal被释放掉
+```
+
+```
+function outer() {
+   var localVal = 30;
+   return function() {
+      return localVal;
+   }
+}
+
+var func = outer();
+func(); // 30
+```
+
+```
+!function() {
+   var localData = 'localData here';
+   document.addEventListener('click', function() {
+      console.log(localData);
+   });
+}();
+```
+
+```
+!function() {
+   var localData = 'localData here';
+   var url = 'http://www.baidu.com/';
+   $.ajax({
+      url: url,
+      success: function() {
+         // do sth.
+         console.log(localData);
+      }
+   });
+}();
+```
+
+闭包 - 常见错误 - 循环闭包
+
+```
+document.body.innerHTML = '<div id="div1">aaa</div>' + '<div id="div2">bbb</div>' + '<div id="div3">ccc</div>';
+for (var i = 1; i < 4; i++) {
+   document.getElementById('div' + i).addEventListener('click', function() {
+      alert(i); // all are 4!
+   })
+}
+
+// 解决方案
+document.body.innerHTML = '<div id="div1">aaa</div>' + '<div id="div2">bbb</div>' + '<div id="div3">ccc</div>';
+for (var i = 1; i < 4; i++) {
+   !function(i) {
+      document.getElementById('div' + i).addEventListener('click', function() {
+         alert(i); // 1, 2, 3
+      });
+   }(i);
+}
+```
+
+闭包 - 封装
+
+```
+(function() {
+   var _userId = 12345;
+   var _typeId = 'item';
+   var export = {};
+   
+   function converter(userId) {
+      return +userId;
+   }
+   
+   export.getUserId = function() {
+      return converter(_userId);
+   }
+   
+   export.getTypeId = function() {
+      return _typeId;
+   }
+   
+   window.export = export;
+}());
+
+export.getUserId(); // 12345
+export.getTypeId(); // item
+
+export._userId; // undefined
+export._typeId; // undefined
+export.converter; // undefined
+```
+
+闭包的概念: 
+
+wiki:
+- 在计算机科学中, 闭包(也称词法闭包或函数闭包)是指一个函数或者函数的引用, 与一个引用环境绑定在一起. 这个引用环境是一个存储该函数每个非局部变量(也叫自由变量)的表.
+- 闭包, 不同于一般的函数, 它允许一个函数在立即词法作用域外调用时, 仍可访问非本地变量.
+
+[阮一峰老师](http://www.ruanyifeng.com/blog/2009/08/learning_javascript_closures.html) 
+
+`闭包就是能够读取其他函数内部变量的函数。由于在Javascript语言中，只有函数内部的子函数才能读取局部变量，因此可以把闭包简单理解成"定义在一个函数内部的函数"。所以，在本质上，闭包就是将函数内部和函数外部连接起来的一座桥梁。`
+
+优点:
+
+灵活和方便, 封装
+
+缺点:
+
+空间浪费, 内存泄漏, 性能消耗
+
+## 利用函数作用域封装
+
+```
+(function() {
+   // do sth.
+   var a, b;
+})();
+
+!function() { // !将函数变为函数表达式, 而非函数声明, 防止声明提前
+   // do sth.
+   var a, b;
+}();
+```
+
+## ES3执行上下文
+
+* 概念: `EC(Execution Context) - 执行上下文`  `VO(Variable Object) - 变量对象: 1. 变量, 2. 函数声明, 3. 函数参数`  `AO - 激活对象`
+* 变量初始化阶段, VO按照如下顺序填充:
+   1. 函数参数(若未传入, 初始化该参数值为undefined)
+   2. 函数声明(若命名发生冲突 - 参数中也存在该命名, 会覆盖掉, 变成ref to func) `function foo(x, y, z) {function x() {}; alert(x);} foo(100);`
+   3. 变量声明(初始化变量值为undefined, 若发声命名冲突, 会被忽略) `function foo(x, y, z) {function func() {}; var func; console.log(func);}; foo(100);`
+   ```
+   function test(a, b) {
+      var c = 10; // var c是变量初始化阶段做的, c = 10 为赋值语句, 不在此阶段做
+      function d() {}
+      var e = function _e() {}; // 函数表达式并不会影响VO, 如_e是匿名函数表达式的名字, 不会记录到VO中
+      (function x() {}); // 因为是函数表达式, 所以不会影响VO
+      b = 20;
+   }
+   test(10);
+   
+   AO(test) = {
+      a: 10,
+      b: undefined, // undefined 和 `Uncaught ReferenceError: b is not defined'' 是不一样的!!!!
+      c: undefined,
+      d: <ref to func 'd'>,
+      e: undefined
+   };
+   ```
+* 代码执行阶段
+   ```
+   // 接上文
+   VO['c'] = 10;
+   VO['e'] = function _e() {};
+   VO['b'] = 20;
+   
+   (function x() {}); // 执行完后被忽略, 括起来成为函数表达式, 并没有被调用, 相当于被忽略掉了
+   
+   AO(test) = {
+      a: 10,
+      b: 20,
+      c: 10,
+      d: <reference to FunctionDeclaration 'd'>,
+      e: function _e() {}
+   };
+   ```
+   * 举个栗子
+   ```
+   alert(x); // function
+   
+   var x = 10;
+   alert(x); // 10
+   x = 20;
+   
+   function x() {}
+   alert(x); // 20
+   
+   if (true) {
+      var a = 1;
+   } else {
+      var b = true;
+   }
+   
+   alert(a); // 1
+   alert(b); // undefined -> 声明阶段被提前, 赋值为undefined, 但执行阶段因为条件控制语句没能被赋值
+   ```
