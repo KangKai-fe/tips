@@ -116,7 +116,7 @@
    var obj = new Foo();
    obj.x; // 1
    obj.hasOwnProperty('x'); // false
-   obj._proto_.hasOwnProperty('x'); // true
+   obj.__proto__.hasOwnProperty('x'); // true
    ```
    * this运算符
    ```
@@ -240,9 +240,9 @@ typeob obj.toString; // 'function'
 'z' in obj; // true
 obj hasOwnProperty('z'); // false
 
-obj _proto_ -> foo.prototype
-foo _proto_ -> Object.prototype
-Object _proto_ -> null // 有限原型链
+obj __proto__ -> foo.prototype
+foo __proto__ -> Object.prototype
+Object __proto__ -> null // 有限原型链
 
 obj.z = 5;
 obj.hasOwnProperty('z'); // true
@@ -260,7 +260,7 @@ obj.z; // 3
 ```
 * 对象创建 - Object.create
 ```
-var obj = Object.create({x: 1}); // obj的_proto_指向Object.prototype
+var obj = Object.create({x: 1}); // obj的__proto_指向Object_.prototype
 obj.x; // 1
 typeof obj.toString// 'function'
 obj.hasOwnProperty('x'); // false
@@ -1076,4 +1076,208 @@ wiki:
    
    alert(a); // 1
    alert(b); // undefined -> 声明阶段被提前, 赋值为undefined, 但执行阶段因为条件控制语句没能被赋值
+   ```
+
+## JavaScript OOP
+
+* 概念: `面向对象程序设计(Object-oriented programming, OOP)是一种程序设计范型, 同时也是一种程序开发的方法. 对象指的是类的实例. 它将对象作为程序的基本单元, 将程序的数据封装在其中, 以提高软件的重用性, 灵活性和扩展性.` - wiki
+* 继承, 封装, 多态, 抽象
+* 基于原型的继承
+   ```
+   // prototype -> 函数对象上预设的对象属性
+   // __proto__ -> 原型 -> 通常指向实例对象的构造器的prototype属性
+   function Foo() {
+      this.y = 2; // 作为函数直接去调用的话, this指向全局对象, 使用new调用时, this指向会指向一个原型为Foo.prototype的空对象, 通过this.y给空对象赋值
+   }
+   typeof Foo.prototype; // 'object'
+   Foo.prototype.x = 1;
+   var obj = new Foo(); // 当使用new来调用Foo时, Foo会作为一个构造器使用, this指向一个对象, 该对象的原型__proto__会指向构造器的prototype属性 -> Foo.prototype
+   
+   obj.y; // 2 -> y是obj上的属性
+   obj.x; // 1 -> x是原型链上的原型Foo.prototype上的属性
+   
+   Foo.prototype
+   {
+      constructor: Foo, // 默认属性
+      __proto__: Object.prototype, // 默认属性, 相当于Foo.prototype的原型指向Object.prototype, 因此valueOf...toString等一些方法才会被继承下来
+      x: 1 // 通过赋值语句增加的
+   }
+   ```
+   * 举个栗子
+   ```
+   function Person(name, age) {
+      this.name = name;
+      this.age = age;
+   }
+   
+   Person.prototype.hi = function() {
+      console.log('Hi, my name is ' + this.name + ', I\'m ' + this.age + ' years old now');
+   };
+   
+   Person.prototype.LEGS_NUM = 2;
+   Person.prototype.ARMS_NUM = 2;
+   Person.prototype.walk = function() {
+      console.log(this.name + ' is walking.');
+   };
+   
+   function Student(name, age, className) {
+      Person.call(this, name, age);
+      this.className = className;
+   }
+   
+   Student.prototype = Object.create(Person.prototype); // Object.create(arg) -> 创建一个空对象, 并且这个空对象的原型__proto__指向传入的参数arg;
+   // Student.prototype会作为所有的new Student的实例对象的原型
+   // 不使用Student.prototype = Person.prototype 直接赋值的原因, 如果通过直接赋值, 由于Student和Person指向了同一个对象, 当想要为Student自己的方法或属性的时候, 同时会给Person.prototype增加同样的属性
+   // 采用Object.create(), Student既可以继承Person上的属性和方法, 也可以添加自己的属性和方法, 而不对Person进行修改
+   Student.prototype.constructor = Student; // 如果不设置, constructor会指向Person
+   
+   Student.prototype.hi = function() { // 覆盖基类的方法
+      console.log('Hi, my name is ' + this.name + ' , I\'m ' + this.age + ' years old now, and from ' + this.className + '.');
+   };
+   
+   Student.prototype.learn = function(subject) { // 创建自己的方法
+      console.log(this.name + ' is learing ' + subject + ' at ' + this.className + '.');
+   };
+   
+   //test
+   var kangkai = new Student('Kangkai', 25, 'Class 3');
+   kangkai.hi(); // Hi, my name is Kangkai , I'm 25 years old now, and from Class 3.
+   kangkai.LEGS_NUM; // 2
+   kangkai.walk(); // Kangkai is walking.
+   kangkai.learn('JavaScript'); // Kangkai is learing JavaScript at Class 3.
+   
+   
+   kangkai __proto__ -> Student.prototype (hi, learn)
+   Student.prototype __proto__ -> Person.prototype (hi, walk, LEGS_NUM, ARMS_NUM)
+   Person.prototype __proto__ -> Object.prototype (hasOwnProperty, valueOf, toString, ...)
+   Object.prototype __proto__ -> null
+   ```
+   * prototype判断
+   ```
+   var obj = {x: 1};
+   Object.getPrototypeOf(obj) === Object.prototype; // true (ES5)
+   obj.__proto__ === Object.prototype; // Chrome
+   
+   var obj2 = Object.create(null); // 创建一个空对象, 对象原型指向null
+   obj2.__proto__; // undefined
+   obj2.toString(); // Uncaught TypeError: obj2.toString is not a function
+   ```
+   * prototype改变
+   ```
+   // 接"举个栗子"里的代码
+   // Student.prototype (className, hi, learn)
+   
+   Student.prototype.x = 1; // 动态修改prototype的属性的时候, 是会影响所有已经创建和新创建的实例的
+   kangkai.x; // 1
+   
+   Student.prototype = {y: 2}; // 如果修改了prototype, 赋值为新的对象的话, 对已经创建的实例是没有影响的, 但是会影响后续创建的实例
+   kangkai.y; // undefined
+   kangkai.x; // 1
+   
+   var liming = new Student('Liming', '25', 'Class 1');
+   liming.x; // undefined
+   liming.y; // 2
+   ```
+   * 内置构造器的prototype
+   ```
+   Object.prototype.x = 1;
+   var obj = {};
+   obj.x; // 1
+   for (var key in obj) {
+      console.log('result: ' + key);
+   }
+   // result: x
+   
+   Object.defineProperty(Object.prototype, 'x', {writable: true, value: 1}); // (ES5)
+   var obj = {};
+   obj.x; // 1
+   for (var key in obj) {
+      console.log('result: ' + key);
+   }
+   // nothing logs
+   ```
+   * 实现继承的方式
+   ```
+   function Person() {}
+   function Student() {}
+   
+   Student.prototype = Person.prototype; // 1: 改写子类的原型时, 也会改写Person的原型, 不要用...
+   Student.prototype = new Person(); // 2: 只是要实现继承, 去创建实例, 如果Person()需要传参时...
+   Student.prototype = Object.create(Person.prototype); // 3: (ES5)创建空对象, 空对象的原型__proto__指向Person.prototype
+   Student.prototype.constructor = Student;
+   
+   if (!Object.create) {
+      Object.create = function(proto) {
+         function F() {}
+         F.prototype = proto;
+         return new F;
+      };
+   }
+   ```
+* 模拟重载 `就是函数或者方法有相同的名称, 但是参数列表不相同的情形, 这样的同名不同参数的函数或者方法之间, 互相称之为重载函数或者方法`
+   ```
+   function Person() {
+      var args = arguments;
+      if (typeof args[0] === 'object' && args[0]) { // && args[0], 将args[0]转化为boolean, 排除null的干扰
+         if (args[0].name) {
+            this.name = args[0].name;
+         }
+         if (args[0].age) {
+            this.age = args[0].age;
+         }
+      } else {
+         if (args[0]) {
+            this.name = args[0];
+         }
+         if (args[1]) {
+            this.age = args[1];
+         }
+      }
+   }
+   
+   Person.prototype.toString = function() { // 重写Person.prototype.toString, 方便检测传参的结果
+      return 'name = ' + this.name + ', age = ' + this.age;
+   }
+   
+   var kangkai = new Person('Kangkai', 25);
+   kangkai.toString(); // "name = Kangkai, age = 25"
+   
+   var liming = new Person({name: 'Liming', age: 24});
+   liming.toString(); // "name = Liming, age = 24"
+   ```
+* 调用父类方法
+   ```
+   function Person(name) { // 基类
+      this.name = name;
+   }
+   function Student(name, className) {
+      this.className = className; // 创建自己的属性
+      Person.call(this, name); // 调用基类的方法和属性
+   }
+   var kangkai = new Student('Kangkai', 'Class 2');
+   kangkai; // Student {className: "Class 2", name: "Kangkai"}
+   
+   Person.prototype.init = function() {};
+   
+   Student.prototype.init = function() {
+      // do sth...
+      Person.prototype.init.apply(this, arguments);
+   }
+   ```
+* 链式调用
+   ```
+   function ClassManager() {}
+   ClassManager.prototype.addClass = function(str) {
+      console.log('Class: ' + str + ' added.');
+      return this; // this 指向 ClassManager的实例
+   }
+   
+   var manager = new ClassManager();
+   manager.addClass('classA').addClass('classB').addClass('classC');
+   // Class: classA added.
+   // Class: classB added.
+   // Class: classC added.
+   ```
+* 抽象类
+   ```
    ```
