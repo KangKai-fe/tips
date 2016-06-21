@@ -1278,6 +1278,134 @@ wiki:
    // Class: classB added.
    // Class: classC added.
    ```
-* 抽象类
+* 抽象类 `通过throw new Error来避免被调用`
    ```
+   function DetectorBase() {
+      throw new Error('Abstract class can not be invoked directly!');
+   }
+   DetectorBase.prototype.detect = function() {console.log('Detection starting...');};
+   DetectorBase.prototype.stop = function() {console.log('Detector stopped.');};
+   DetectorBase.prototype.init = function() {throw new Error('Error');};
+   
+   function LinkDetector() {}
+   LinkDetector.prototype = Object.create(Detecrot.prototype);
+   LinkDetector.prototype.constructor = LinkDetector;
+   
+   // ... add methods to LinkDetector ...
+   ```
+* defineProperty(ES5)
+   ```
+   function Person(name) {
+      Object.defineProperty(this, 'name', {value: name, enumerable: true}); // 不可写, 不可删, 可遍历
+   }
+   Object.defineProperty(Person, 'ARMS_NUM', {value: 2, enumerable: true});
+   Object.seal(Person.prototype); // 不再被扩展和配置
+   Object.seal(Person);
+   function Student(name, className) {
+      this.className = className;
+      Person.call(this, name);
+   }
+   Student.prototype = Object.create(Person.prototype);
+   Student.prototype.constructor = Student;
+   ```
+* 模块化
+   ```
+   var moduleA;
+   moduleA = function() { // 立即执行的匿名函数
+      var prop = 1;
+      function func() {}
+      return {
+         func: func,
+         prop: prop
+      }
+   }();
+   
+   // 或者
+   var moduleA;
+   moduleA = new function() { // 通过new, 会返回this -> 对象
+      var prop = 1;
+      function func() {}
+      this.func = func;
+      this.prop = prop;
+   };
+   ```
+* 实践 - 探测器
+   ```
+   !function(global) { // 立即执行的匿名函数表达式, 防止变量或者函数声明泄露到外部
+      function DetectorBase(configs) {
+         if (!this instanceof DetectorBase) {
+            throw new Error('Do not invoke without new.');
+         }
+         this.configs = configs;
+         this.analyze();
+      }
+      
+      DetectorBase.prototype.detect = function() {
+         throw new Error('Not implemented');
+      };
+      
+      DetectorBase.prototype.analyze = function() {
+         console.log('analyzing...');
+         this.data = '###data###';
+      };
+      
+      function LinkDetector(links) {
+         if (!this instanceof LinkDetector) {
+            throw new Error('Do not invoke without new.');
+         }
+         this.links = links;
+         DetectorBase.apply(this, arguments);
+      }
+      
+      function ContainerDetector(containers) {
+         if (!this instanceof ContainerDetector) {
+            throw new Error('Do not invoke without new.');
+         }
+         this.containers = containers;
+         DetectorBase.apply(this, arguments);
+      }
+      
+      // inherit first
+      inherit(LinkDetector, DetectorBase);
+      inherit(ContainerDetector, DetectorBase);
+      
+      // expand later
+      LinkDetector.prototype.detect = function() {
+         console.log('Loading data: ' + this.data);
+         console.log('Link detection started.');
+         console.log('Scanning links: ' + this.links);
+      };
+      
+      ContainerDetector.prototype.detect = function() {
+         console.log('Loading data: ' + this.data);
+         console.log('Container detection started.');
+         console.log('Scanning containers: ' + this.containers);
+      };
+      
+      // prevent from being altered
+      Object.freeze(DetectorBase); // 不可删, 不可写, 不可扩展
+      Object.freeze(DetectorBase.prototype);
+      Object.freeze(LinkDetector);
+      Object.freeze(LinkDetector.prototype);
+      Object.freeze(ContainerDetector);
+      Object.freeze(ContainerDetector.prototype);
+      
+      // export to global object
+      Object.defineProperties(global, {
+         LinkDetector: {value: LinkDetector}, // 不可枚举, 不可改写, 不可删除
+         ContainerDetector: {value: ContainerDetector},
+         DetectorBase: {value: DetectorBase}
+      });
+      
+      function inherit(subClass, superClass) {
+         subClass.prototype = Object.create(superClass.prototype);
+         subClass.prototype.constructor = subClass;
+      }
+   }(this);
+   
+   var cd = new ContainerDetector('#abc #def #ghi');
+   var ld = new LinkDetector('http://www.baidu.com http://www.taobao.com http://www.qq.com');
+   
+   cd.detect();
+   ld.detect();
    ```
