@@ -1409,3 +1409,67 @@ wiki:
    cd.detect();
    ld.detect();
    ```
+
+## 正则表达式
+
+* 正则基础
+   * `.` 匹配任意字符(除换行符外: \n, \r, \u2028, \u2029) `/.../.test('1a@');`
+   * `\d` 匹配数字0-9 `/\d\d\d/.test(123);`
+   * `\D` 非\d, 即匹配不是数字0-9的字符 `/\D\D\D/.test('ab!');`
+   * `\w` 匹配数字0-9, 或字母a-z及A-Z, 或下划线 `/\w\w\w\w/.test('aB9_')`
+   * `\W` 非\w `/\W\W\W/.test('@!#');`
+   * `\s` 匹配空格符, TAB, 换页符, 换行符 `/\sabc/.test(' abc');`
+   * `\S` 非\s
+   * `\t \r \n \v \f` 匹配tab 回车 换行 垂直制表符 换页符
+* 范围符号
+   * `[...]` 字符范围 `[a-z] [0-9] [A-Z0-9a-z_]`
+   * `[^...]` 字符范围以外 `[^a-z] [^abc]`
+   * `^` 行首 `^Hi`
+   * `$` 行尾 `test$`
+   * `\b` 零宽单词边界 `\bno`
+   * `\B` 非\b
+* 特殊符号转义 `/\^abc/.test('^abc');`
+* 分组
+   * `(x)` 分组, 并记录匹配到的字符串 `/(abc)/`
+   * `\num` 表示使用分组符(x)匹配到的字符串 `/(abc)\1/.test('abcabc');`
+   * `(?:x)` 仅分组 `/(?:abc)(def)\1/.test('abcdefdef');`
+* 重复
+   * `x* x+` 重复次数>=0 重复次数>0 贪婪算法 `正则表达式: abc*将匹配ab, abc, abccccccc; abc+ 匹配abc, abccccc, 不匹配ab`
+   * `x*? x+?` 同x\*, x+ 非贪婪算法 `正则表达式: abc*?在字符串abcccccc中匹配ab, abc+?匹配abc`
+   * `x?` 出现0次或1次
+   * `x|y` x或者y `x|y匹配x, 也匹配y; ab|cd|ef 匹配ab或cd或ef`
+   * `x{n} x{n,} x{n,m}` 重复n次, 重复>=n次, 重复次数满足n<=x<=m `x{5}匹配xxxxxoo, 不匹配xxo;  x{1,3}匹配x, xx, xxx`
+* 三个flag
+   * `global` 匹配多次
+   * `ignoreCase` 忽略大小写
+   * `multiline` 跨行
+   * 字面量 `/abc/gim.test('ABC'); // true`
+   * 对象构造器 `RegExp('abc', 'mgi')`
+* RegExp对象属性
+   * global `/abc/g.global // true` (使用了g, 返回true)
+   * ignoreCase `/abc/g.ignoreCase // false`
+   * multiline `/abc/g.multiline // false`
+   * source `/abc/g.source // 'abc'`
+* RegExp对象方法
+   * exec `/abc/.exec('abcdef'); // 'abc'` 正则.exec(字符串) 与 字符串.match(正则) 类似
+   * test `/abc/.test('abcde'); // true`
+   * toString `/abc/.toString(); // '/abc/'`
+   * compile 改变正则的规则和属性
+   ```
+   var reg = /abc/;
+   reg.compile('def');
+   reg.test('def'); // true
+   ```
+* String类型与正则相关的方法
+   * String.prototype.search `'abcabcdef'.search(/(abc)\1/); // 0` 返回索引
+   * String.prototype.replace 
+   ```
+   'aabbbbcc'.replace(/b+?/, '1'); // aa1bbbcc
+   'aabbbbcc'.replace(/b+/, '1'); // aa1cc
+   ```
+   * String.prototype.match
+   ```
+   'aabbbbcc'.match(/b+/); // ['bbbb']
+   'aabbbbccbbaa'.match(/b+/g); // ['bbbb', 'bb']
+   ```
+   * String.prototype.split `'aabbbbccbbaa'.split(/b+/); // ['aa', 'cc', 'aa']`
